@@ -1,0 +1,3 @@
+$ cd /workspace/shadcn-ui
+$ cp -r /workspace/shadcn-ui/* /workspace/digital_guidance_platform/
+
