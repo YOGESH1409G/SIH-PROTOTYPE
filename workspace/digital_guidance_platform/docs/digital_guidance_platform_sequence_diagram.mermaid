@@ -1,0 +1,118 @@
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant A as AuthService
+    participant P as ProfileService
+    participant AS as AssessmentService
+    participant R as RecommendationEngine
+    participant C as CollegeService
+    participant N as NotificationService
+    participant D as Database
+    participant L as LocationService
+
+    %% User Registration Flow
+    U->>F: Register with email/password
+    F->>A: POST /auth/register
+    A->>D: Create user record
+    A->>P: Create user profile
+    P->>D: Save profile data
+    A-->>F: Return JWT token
+    F-->>U: Registration successful
+
+    %% User Login Flow
+    U->>F: Login with credentials
+    F->>A: POST /auth/login
+    A->>D: Validate credentials
+    A-->>F: Return JWT token
+    F->>P: GET /profile/me
+    P->>D: Fetch user profile
+    P-->>F: Return profile data
+    F-->>U: Show dashboard
+
+    %% Assessment Flow
+    U->>F: Start aptitude assessment
+    F->>AS: GET /assessments/aptitude
+    AS->>D: Fetch assessment questions
+    AS-->>F: Return questions
+    F-->>U: Display questions
+    
+    U->>F: Submit assessment responses
+    F->>AS: POST /assessments/submit
+    AS->>D: Save responses
+    AS->>AS: Calculate scores
+    AS->>D: Save assessment result
+    AS->>R: Generate recommendations
+    R->>D: Fetch user profile
+    R->>D: Fetch courses/colleges
+    R->>R: Apply ML algorithms
+    R->>D: Save recommendations
+    R-->>AS: Return recommendations
+    AS-->>F: Return results + recommendations
+    F-->>U: Show assessment results
+
+    %% College Search Flow
+    U->>F: Search for colleges
+    F->>L: GET /location/detect
+    L-->>F: Return user location
+    F->>C: GET /colleges/search?location&stream
+    C->>D: Query colleges
+    C->>L: Calculate distances
+    L-->>C: Return distances
+    C-->>F: Return college list
+    F-->>U: Display colleges
+
+    %% Recommendation Generation Flow
+    R->>D: Fetch user assessment results
+    R->>D: Fetch user preferences
+    R->>D: Fetch available courses
+    R->>D: Fetch college data
+    R->>R: Apply collaborative filtering
+    R->>R: Apply content-based filtering
+    R->>R: Combine recommendation scores
+    R->>D: Save recommendations
+    R->>N: Trigger recommendation notifications
+    N->>D: Create notification records
+    N->>N: Schedule delivery
+    N-->>R: Confirmation
+
+    %% Timeline and Notifications Flow
+    N->>D: Fetch upcoming deadlines
+    N->>D: Fetch user preferences
+    N->>N: Filter relevant timelines
+    N->>D: Create notification records
+    N->>N: Send email notifications
+    N->>N: Send push notifications
+    N->>D: Update notification status
+
+    %% Profile Update Flow
+    U->>F: Update profile information
+    F->>P: PUT /profile/update
+    P->>D: Update profile data
+    P->>R: Trigger recommendation refresh
+    R->>R: Recalculate recommendations
+    R->>D: Update recommendations
+    P-->>F: Confirmation
+    F-->>U: Profile updated
+
+    %% Career Exploration Flow
+    U->>F: Explore career paths
+    F->>C: GET /careers/explore
+    C->>D: Fetch career data
+    C->>D: Fetch related courses
+    C->>R: Get personalized career matches
+    R->>D: Fetch user assessment results
+    R->>R: Calculate career compatibility
+    R-->>C: Return match scores
+    C-->>F: Return career data with scores
+    F-->>U: Display career paths
+
+    %% Offline Sync Flow
+    F->>F: Detect offline mode
+    F->>F: Cache essential data
+    U->>F: Continue using app offline
+    F->>F: Store actions in local queue
+    F->>F: Detect online mode
+    F->>A: Sync queued actions
+    A->>D: Process offline actions
+    A-->>F: Sync confirmation
+    F->>F: Update local cache
